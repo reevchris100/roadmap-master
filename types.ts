@@ -25,7 +25,7 @@ export interface User {
 }
 
 export interface Roadmap {
-  id:string;
+  id: string;
   title: string;
   description: string;
   isPublic: boolean;
@@ -34,6 +34,7 @@ export interface Roadmap {
   milestones: Milestone[];
   isTemplate?: boolean;
   shareId?: string;
+  category?: string;
 }
 
 export interface Milestone {

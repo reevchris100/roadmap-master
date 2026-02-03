@@ -3,12 +3,12 @@ import type { Roadmap, Progress, User } from '../types';
 import { MilestoneStatus, ResourceType, SubscriptionStatus } from '../types';
 
 export const mockUser: User = {
-    id: 'user_1',
-    email: 'dev@example.com',
-    name: 'Alex Doe',
-    paypalSubscriptionId: null,
-    subscriptionStatus: SubscriptionStatus.FREE,
-    createdAt: new Date(),
+  id: 'user_1',
+  email: 'dev@example.com',
+  name: 'Alex Doe',
+  paypalSubscriptionId: null,
+  subscriptionStatus: SubscriptionStatus.FREE,
+  createdAt: new Date(),
 };
 
 export const mockRoadmaps: Roadmap[] = [
@@ -20,6 +20,7 @@ export const mockRoadmaps: Roadmap[] = [
     userId: 'user_1',
     createdAt: new Date('2023-10-26'),
     isTemplate: true,
+    category: 'Tech',
     milestones: [
       {
         id: 'milestone_1_1',
@@ -41,7 +42,7 @@ export const mockRoadmaps: Roadmap[] = [
         status: MilestoneStatus.IN_PROGRESS,
         order: 2,
         resources: [
-            { id: 'res_3', milestoneId: 'milestone_1_2', title: 'Official React Tutorial', url: '#', type: ResourceType.ARTICLE },
+          { id: 'res_3', milestoneId: 'milestone_1_2', title: 'Official React Tutorial', url: '#', type: ResourceType.ARTICLE },
         ]
       },
       {
@@ -62,7 +63,8 @@ export const mockRoadmaps: Roadmap[] = [
     isPublic: false,
     userId: 'user_1',
     createdAt: new Date('2024-01-15'),
-    isTemplate: false,
+    isTemplate: true,
+    category: 'Business',
     milestones: [
       {
         id: 'milestone_2_1',
@@ -84,9 +86,42 @@ export const mockRoadmaps: Roadmap[] = [
       },
     ],
   },
+  {
+    id: 'roadmap_3',
+    title: 'Intro to Generative AI',
+    description: 'Understand LLMs, Prompts, and current AI trends.',
+    isPublic: true,
+    userId: 'user_1',
+    createdAt: new Date('2024-02-10'),
+    isTemplate: true, // Tagged as template
+    category: 'AI',
+    milestones: [{ id: 'm3_1', roadmapId: 'roadmap_3', title: 'What is LLM?', description: 'Concept of Large Language Models', status: MilestoneStatus.PLANNED, order: 1, resources: [] }]
+  },
+  {
+    id: 'roadmap_4',
+    title: 'System Design Interview Guide',
+    description: 'Scalability, Load Balancing, Caching and more.',
+    isPublic: true,
+    userId: 'user_1',
+    createdAt: new Date('2024-02-12'),
+    isTemplate: true, // Tagged as template
+    category: 'System Design',
+    milestones: [{ id: 'm4_1', roadmapId: 'roadmap_4', title: 'Vertical vs Horizontal Scaling', description: 'Basics of scaling', status: MilestoneStatus.PLANNED, order: 1, resources: [] }]
+  },
+  {
+    id: 'roadmap_5',
+    title: 'Personal Finance Mastery',
+    description: 'Budgeting, Investing, and Retirement planning.',
+    isPublic: true,
+    userId: 'user_1',
+    createdAt: new Date('2024-02-15'),
+    isTemplate: true, // Tagged as template
+    category: 'Finance',
+    milestones: [{ id: 'm5_1', roadmapId: 'roadmap_5', title: 'Tracking Expenses', description: 'Know where your money goes', status: MilestoneStatus.PLANNED, order: 1, resources: [] }]
+  },
 ];
 
 export const mockProgress: Progress[] = [
-    { id: 'progress_1', userId: 'user_1', milestoneId: 'milestone_1_1', isCompleted: true },
-    { id: 'progress_2', userId: 'user_1', milestoneId: 'milestone_2_1', isCompleted: true },
+  { id: 'progress_1', userId: 'user_1', milestoneId: 'milestone_1_1', isCompleted: true },
+  { id: 'progress_2', userId: 'user_1', milestoneId: 'milestone_2_1', isCompleted: true },
 ];

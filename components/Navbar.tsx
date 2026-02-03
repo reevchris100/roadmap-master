@@ -45,7 +45,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick, navigateTo }) => {
       </button>
       <div className="w-full flex items-center justify-end gap-4">
         <a
-          href="https://www.buymeacoffee.com/developer"
+          href="https://buymeacoffee.com/reevchris"
           target="_blank"
           rel="noopener noreferrer"
           className="hidden sm:flex items-center justify-center gap-2 bg-secondary hover:bg-secondary/80 text-foreground font-medium py-2 px-3 rounded-md transition-colors text-sm"

@@ -25,6 +25,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingRoadmap, setEditingRoadmap] = useState<Roadmap | null>(null);
 
+  const [selectedCategory, setSelectedCategory] = useState('All');
+
+  const categories = [
+    'All', 'Tech', 'Finance', 'AI', 'Business', 'Leetcode', 'Interviews', 'System Design'
+  ];
+
   const filteredRoadmaps = useMemo(() => {
     return roadmaps.filter(roadmap =>
       roadmap.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -32,7 +38,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap }) => {
   }, [roadmaps, searchTerm]);
 
   const userRoadmaps = filteredRoadmaps.filter(r => !r.isTemplate);
-  const templateRoadmaps = filteredRoadmaps.filter(r => r.isTemplate);
+
+  const templateRoadmaps = filteredRoadmaps.filter(r => {
+    if (!r.isTemplate) return false;
+    if (selectedCategory === 'All') return true;
+    return r.category === selectedCategory;
+  });
 
   const handleAction = (action: () => void, message: string) => {
     if (isGuest) {
@@ -54,14 +65,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap }) => {
               key={roadmap.id}
               roadmap={roadmap}
               progress={calculateProgress(roadmap.id)}
-              onSelect={() => handleAction(() => onSelectRoadmap(roadmap.id), "Sign in to view roadmap details")}
+              onSelect={() => {
+                if (isTemplate) {
+                  onSelectRoadmap(roadmap.id);
+                } else {
+                  handleAction(() => onSelectRoadmap(roadmap.id), "Sign in to view roadmap details");
+                }
+              }}
               onDelete={!isTemplate ? deleteRoadmap : undefined}
               onEdit={!isTemplate ? () => setEditingRoadmap(roadmap) : undefined}
             />
           ))}
         </div>
       ) : (
-        <p className="text-muted-foreground text-sm mt-4">No roadmaps found.</p>
+        <p className="text-muted-foreground text-sm mt-4">No roadmaps found in this category.</p>
       )}
     </div>
   );
@@ -101,7 +118,34 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap }) => {
         />
       </div>
 
-      <RoadmapGrid roadmaps={templateRoadmaps} title="Built-in Templates" isTemplate />
+      <div className="mt-12 mb-8">
+        <div className="text-center mb-8">
+          <h3 className="text-2xl font-bold tracking-tight mb-2">Role-based Roadmaps</h3>
+          <p className="text-muted-foreground">Select a category to explore curated learning paths.</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {categories.map(category => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={`p-4 rounded-lg border text-left transition-all hover:shadow-md flex justify-between items-center group bg-card ${selectedCategory === category
+                  ? 'border-primary ring-1 ring-primary'
+                  : 'border-border hover:border-primary/50'
+                }`}
+            >
+              <span className={`font-semibold ${selectedCategory === category ? 'text-primary' : 'text-card-foreground'}`}>
+                {category}
+              </span>
+              <span className={`text-muted-foreground group-hover:text-primary transition-colors ${selectedCategory === category ? 'text-primary' : ''}`}>
+                &rarr;
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <RoadmapGrid roadmaps={templateRoadmaps} title={selectedCategory === 'All' ? "Pre defined templates" : `${selectedCategory} Pre defined templates`} isTemplate />
       <RoadmapGrid roadmaps={userRoadmaps} title="Your Roadmaps" />
 
       <AIGenerationModal
