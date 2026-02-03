@@ -114,8 +114,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const userRoadmaps = roadmaps.filter(r => !r.isTemplate && r.userId === currentUser.id);
 
-    if (currentUser.subscriptionStatus === SubscriptionStatus.FREE && userRoadmaps.length >= 1) {
-      throw new Error("Free plan is limited to 1 roadmap. Please upgrade to create more.");
+    if (currentUser.subscriptionStatus === SubscriptionStatus.FREE && userRoadmaps.length >= 3) {
+      throw new Error("Free plan is limited to 3 roadmaps. Please upgrade to create more.");
     }
     if (currentUser.subscriptionStatus === SubscriptionStatus.PRO && userRoadmaps.length >= 5) {
       throw new Error("Pro plan is limited to 5 roadmaps.");
