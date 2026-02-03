@@ -1,8 +1,8 @@
 
 import React, { createContext, useState, useContext, ReactNode, useCallback, useEffect } from 'react';
-import type { Roadmap, Progress, Milestone } from '../types';
+import type { Roadmap, Progress, Milestone, Resource } from '../types';
 import { mockRoadmaps, mockProgress } from '../services/mockData';
-import { MilestoneStatus, SubscriptionStatus } from '../types';
+import { MilestoneStatus, SubscriptionStatus, ResourceType } from '../types';
 import { useAuth } from './AuthContext';
 
 interface DataContextType {
@@ -20,50 +20,42 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-const useLocalStorage = <T,>(key: string, initialValue: T): [T, React.Dispatch<React.SetStateAction<T>>] => {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      console.error(error);
-      return initialValue;
-    }
-  });
 
-  const setValue: React.Dispatch<React.SetStateAction<T>> = (value) => {
-    try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
-      window.localStorage.setItem(key, JSON.stringify(valueToStore));
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  return [storedValue, setValue];
-};
-
+import { dbRequest } from '../services/databaseService';
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [roadmaps, setRoadmaps] = useLocalStorage<Roadmap[]>('roadmaps', mockRoadmaps);
-  const [progress, setProgress] = useLocalStorage<Progress[]>('progress', mockProgress);
-  const { currentUser } = useAuth();
+  // Use simple state instead of localStorage
+  const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
+  const [progress, setProgress] = useState<Progress[]>([]);
+  const { currentUser, isGuest } = useAuth();
 
-  // Effect to ensure templates are always up-to-date from mockData
+  // Load Initial Data
   useEffect(() => {
-    setRoadmaps(prevRoadmaps => {
-      const userCreatedRoadmaps = prevRoadmaps.filter(r => !r.isTemplate);
-      const freshTemplates = mockRoadmaps.filter(r => r.isTemplate);
+    const loadData = async () => {
+      // Always load templates from mock (or DB if we migrated them)
+      const templates = mockRoadmaps.filter(r => r.isTemplate);
 
-      // Check if we actually need to update to avoid infinite loops if strict equality fails
-      // For simplicity, we just combine them. 
-      // In a real app we might check if they differ.
-
-      // We also need to preserve the ID if possible or ensures mockData IDs are stable (they are).
-      return [...freshTemplates, ...userCreatedRoadmaps];
-    });
-  }, []);
+      try {
+        if (currentUser) {
+          // Load user roadmaps from DB
+          const userRoadmaps = await dbRequest.getUserRoadmaps(currentUser.id);
+          const userProgress = await dbRequest.getUserProgress(currentUser.id);
+          setRoadmaps([...templates, ...userRoadmaps]);
+          setProgress(userProgress);
+        } else {
+          // Guest mode: Just use templates + maybe local storage for guest creations?
+          // For now, just templates.
+          setRoadmaps(templates);
+          setProgress([]);
+        }
+      } catch (err) {
+        console.error("Failed to load data", err);
+        // Fallback
+        setRoadmaps(templates);
+      }
+    };
+    loadData();
+  }, [currentUser]);
 
   const getRoadmapById = useCallback((id: string) => {
     return roadmaps.find(r => r.id === id);
@@ -88,27 +80,36 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return progress.some(p => p.milestoneId === milestoneId && p.isCompleted);
   }, [progress]);
 
-  const toggleMilestoneCompletion = (milestoneId: string) => {
-    setProgress(prev => {
-      if (!currentUser) return prev;
-      const existing = prev.find(p => p.milestoneId === milestoneId);
-      if (existing) {
-        return prev.map(p => p.milestoneId === milestoneId ? { ...p, isCompleted: !p.isCompleted } : p);
-      }
-      return [...prev, { id: `prog_${Date.now()}`, userId: currentUser.id, milestoneId, isCompleted: true }];
-    });
-  };
+  const toggleMilestoneCompletion = async (milestoneId: string) => {
+    if (!currentUser) return; // Guests don't save progress?
 
-  const deleteRoadmap = (roadmapId: string) => {
-    setRoadmaps(prev => prev.filter(r => r.id !== roadmapId));
-    const roadmapToDelete = getRoadmapById(roadmapId);
-    if (roadmapToDelete) {
-      const milestoneIds = roadmapToDelete.milestones.map(m => m.id);
-      setProgress(prev => prev.filter(p => !milestoneIds.includes(p.milestoneId)));
+    const existing = progress.find(p => p.milestoneId === milestoneId);
+
+    // Update State Optimistically
+    if (existing) {
+      setProgress(prev => prev.map(p => p.milestoneId === milestoneId ? { ...p, isCompleted: !p.isCompleted } : p));
+      // Sync DB
+      const updated = { ...existing, isCompleted: !existing.isCompleted };
+      await dbRequest.saveProgress(updated);
+    } else {
+      const newProgress = { id: `prog_${Date.now()}`, userId: currentUser.id, milestoneId, isCompleted: true };
+      setProgress(prev => [...prev, newProgress]);
+      // Sync DB
+      await dbRequest.saveProgress(newProgress);
     }
   };
 
-  const addRoadmap = (newRoadmapData: Partial<Roadmap>) => {
+  const deleteRoadmap = async (roadmapId: string) => {
+    // Optimistic Update
+    setRoadmaps(prev => prev.filter(r => r.id !== roadmapId));
+
+    // Sync DB
+    if (currentUser) {
+      await dbRequest.deleteRoadmap(roadmapId);
+    }
+  };
+
+  const addRoadmap = async (newRoadmapData: Partial<Roadmap>) => {
     if (!currentUser) throw new Error("User not authenticated.");
 
     const userRoadmaps = roadmaps.filter(r => !r.isTemplate && r.userId === currentUser.id);
@@ -142,14 +143,35 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             ...r,
             id: r.id || `res_${Date.now()}_${index}_${rIndex}`,
             milestoneId: milestoneId,
+            // Correctly fixing type issue
+            type: r.type || ResourceType.ARTICLE
           }))
         };
       })
     };
+
+    // Optimistic
     setRoadmaps(prev => [newRoadmap, ...prev]);
+
+    // Sync DB
+    try {
+      await dbRequest.createRoadmap(newRoadmap);
+    } catch (e) {
+      console.error("Failed to create roadmap in DB", e);
+      // Rollback?
+      setRoadmaps(prev => prev.filter(r => r.id !== newRoadmapId));
+      throw e;
+    }
   };
 
-  const updateRoadmap = (roadmapId: string, data: Partial<Omit<Roadmap, 'id' | 'userId' | 'createdAt'>>) => {
+  const updateRoadmap = async (roadmapId: string, data: Partial<Omit<Roadmap, 'id' | 'userId' | 'createdAt'>>) => {
+    // This is complex because we need to update deep structures (milestones).
+    // For MVP, we will only handle top-level metadata updates in DB, 
+    // BUT frontend state needs full update.
+
+    // Note: A full implementation would need 'upsert' logic for nested items in DB.
+    // For now, we update local state fully, but DB sync might be partial/limited in this demo unless we implement full sync.
+
     setRoadmaps(prev =>
       prev.map(r => {
         if (r.id === roadmapId) {
@@ -161,13 +183,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
 
           if (data.milestones) {
-            updatedRoadmap.milestones = data.milestones.map((m, index) => ({
+            updatedRoadmap.milestones = data.milestones.map((m: any, i) => ({
               ...m,
-              id: m.id || `milestone_${Date.now()}_${index}`,
-              roadmapId: roadmapId,
+              id: m.id || `milestone_${Date.now()}_${i}`,
+              roadmapId: r.id,
               status: m.status || MilestoneStatus.PLANNED,
-              order: index + 1,
-              resources: m.resources || [],
+              order: i + 1,
+              resources: (m.resources || []).map((res: Resource, resIndex: number) => ({
+                ...res,
+                id: res.id || `res_${Date.now()}_${i}_${resIndex}`,
+                milestoneId: m.id || `milestone_${Date.now()}_${i}`,
+                type: res.type || ResourceType.ARTICLE
+              }))
             }));
           }
           return updatedRoadmap;
@@ -175,6 +202,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return r;
       })
     );
+
+    // DB Sync for top level fields
+    if (currentUser) {
+      const roadmap = roadmaps.find(r => r.id === roadmapId);
+      if (roadmap) {
+        // We can't easily sync nested milestones without more complex logic (delete missing, insert new, update existing).
+        // For this step, I'll log a warning or try a basic update.
+        await dbRequest.updateRoadmap({ ...roadmap, ...data } as Roadmap);
+      }
+    }
   };
 
   return (
