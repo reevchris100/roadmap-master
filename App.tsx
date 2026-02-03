@@ -12,19 +12,19 @@ import { DataProvider } from './contexts/DataContext';
 import { PublicRoadmapPage } from './components/PublicRoadmapPage';
 
 const AppContent: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, isGuest } = useAuth();
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const [selectedRoadmapId, setSelectedRoadmapId] = useState<string | null>(null);
   const [publicShareId, setPublicShareId] = useState<string | null>(null);
 
   useEffect(() => {
-      const path = window.location.pathname;
-      if (path.startsWith('/share/')) {
-          const shareId = path.split('/')[2];
-          if(shareId) {
-            setPublicShareId(shareId);
-          }
+    const path = window.location.pathname;
+    if (path.startsWith('/share/')) {
+      const shareId = path.split('/')[2];
+      if (shareId) {
+        setPublicShareId(shareId);
       }
+    }
   }, []);
 
   const handleSelectRoadmap = useCallback((id: string) => {
@@ -38,12 +38,15 @@ const AppContent: React.FC = () => {
       setSelectedRoadmapId(null);
     }
   }, []);
-  
+
   if (publicShareId) {
-      return <PublicRoadmapPage shareId={publicShareId} />
+    return <PublicRoadmapPage shareId={publicShareId} />
   }
 
-  if (!currentUser) {
+  console.log('App Render:', { currentUser, isGuest, currentPage });
+
+  if (!currentUser && !isGuest) {
+    console.log('Redirecting to Login');
     return <LoginPage />;
   }
 
@@ -76,13 +79,13 @@ const AppContent: React.FC = () => {
 
 
 const App: React.FC = () => {
-    return (
-        <AuthProvider>
-            <DataProvider>
-                <AppContent />
-            </DataProvider>
-        </AuthProvider>
-    );
+  return (
+    <AuthProvider>
+      <DataProvider>
+        <AppContent />
+      </DataProvider>
+    </AuthProvider>
+  );
 }
 
 export default App;
