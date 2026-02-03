@@ -66,7 +66,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap }) => {
               roadmap={roadmap}
               progress={calculateProgress(roadmap.id)}
               onSelect={() => {
-                if (isTemplate) {
+                if (isTemplate && roadmap.shareId) {
+                  window.location.href = `/share/${roadmap.shareId}`;
+                } else if (isTemplate) {
                   onSelectRoadmap(roadmap.id);
                 } else {
                   handleAction(() => onSelectRoadmap(roadmap.id), "Sign in to view roadmap details");
@@ -146,7 +148,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap }) => {
         </div>
       </div>
 
-      <RoadmapGrid roadmaps={templateRoadmaps} title={selectedCategory === 'All' ? "Pre-defined Roadmaps" : `${selectedCategory} Pre-defined Roadmaps`} isTemplate />
+      <RoadmapGrid
+        roadmaps={templateRoadmaps}
+        title={selectedCategory === 'All' ? "Pre-defined Roadmaps" : `${selectedCategory} Pre-defined Roadmaps`}
+        isTemplate
+      />
       <RoadmapGrid roadmaps={userRoadmaps} title="Your Roadmaps" />
 
       <AIGenerationModal

@@ -73,7 +73,7 @@ export const PublicRoadmapPage: React.FC<PublicRoadmapPageProps> = ({ shareId })
         };
 
         fetchPublic();
-    }, [shareId, roadmap]);
+    }, [shareId]);
 
     if (loading) {
         return (

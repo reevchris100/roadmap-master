@@ -59,7 +59,8 @@ export const dbRequest = {
                 )
             `)
             .eq('share_id', shareId)
-            .or('is_public.eq.true,is_template.eq.true') // Ensure it is public OR a template
+            // We want to find a roadmap with this share_id AND (is_public OR is_template)
+            .or('is_public.eq.true,is_template.eq.true')
             .single();
 
         if (error) {
