@@ -85,11 +85,14 @@ export const PublicRoadmapPage: React.FC<PublicRoadmapPageProps> = ({ shareId })
 
     return (
         <div className="min-h-screen bg-background text-foreground flex flex-col">
-            <header className="py-4 px-8 border-b border-border">
+            <header className="py-4 px-8 border-b border-border flex justify-between items-center">
                 <h1 className="text-xl font-bold flex items-center gap-2">
                     <SparklesIcon className="w-6 h-6 text-primary" />
                     Roadmap Master
                 </h1>
+                <a href="/" className="text-sm font-medium text-primary hover:underline">
+                    Back to Dashboard
+                </a>
             </header>
 
             <main className="flex-grow p-4 sm:p-6 lg:p-8">

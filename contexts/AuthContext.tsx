@@ -20,8 +20,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isGuest, setIsGuest] = useState(false);
+  const [isGuest, setIsGuest] = useState<boolean>(() => {
+    return localStorage.getItem('isGuest') === 'true';
+  });
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    localStorage.setItem('isGuest', String(isGuest));
+  }, [isGuest]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -83,6 +89,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (error) throw error;
     setCurrentUser(null);
     setIsGuest(false);
+    localStorage.removeItem('isGuest');
   };
 
   const upgradeSubscription = () => {
