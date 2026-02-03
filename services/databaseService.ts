@@ -64,6 +64,7 @@ export const dbRequest = {
             .single();
 
         if (error) {
+            console.error("Error fetching public roadmap:", error);
             return null;
         }
 

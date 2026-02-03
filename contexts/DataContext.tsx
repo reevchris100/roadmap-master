@@ -165,25 +165,27 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const updateRoadmap = async (roadmapId: string, data: Partial<Omit<Roadmap, 'id' | 'userId' | 'createdAt'>>) => {
-    // This is complex because we need to update deep structures (milestones).
-    // For MVP, we will only handle top-level metadata updates in DB, 
-    // BUT frontend state needs full update.
+    // 1. Find the current roadmap to check its current state
+    const existingRoadmap = roadmaps.find(r => r.id === roadmapId);
+    if (!existingRoadmap) return;
 
-    // Note: A full implementation would need 'upsert' logic for nested items in DB.
-    // For now, we update local state fully, but DB sync might be partial/limited in this demo unless we implement full sync.
+    // 2. Prepare the updates
+    const updates = { ...data };
 
+    // 3. Generate shareId if making public and it doesn't exist
+    if (updates.isPublic && !existingRoadmap.shareId && !updates.shareId) {
+      updates.shareId = `share_${Date.now()}_${roadmapId.substring(0, 4)}`;
+    }
+
+    // 4. Update Local State
     setRoadmaps(prev =>
       prev.map(r => {
         if (r.id === roadmapId) {
-          const updatedRoadmap = { ...r, ...data };
+          const updatedRoadmap = { ...r, ...updates };
 
-          // If making public for the first time, generate a shareId
-          if (data.isPublic && !r.shareId) {
-            updatedRoadmap.shareId = `share_${Date.now()}_${roadmapId.substring(0, 4)}`;
-          }
-
-          if (data.milestones) {
-            updatedRoadmap.milestones = data.milestones.map((m: any, i) => ({
+          // Handle nested milestones update if present
+          if (updates.milestones) {
+            updatedRoadmap.milestones = updates.milestones.map((m: any, i) => ({
               ...m,
               id: m.id || `milestone_${Date.now()}_${i}`,
               roadmapId: r.id,
@@ -203,14 +205,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       })
     );
 
-    // DB Sync for top level fields
+    // 5. Sync DB for top level fields
     if (currentUser) {
-      const roadmap = roadmaps.find(r => r.id === roadmapId);
-      if (roadmap) {
-        // We can't easily sync nested milestones without more complex logic (delete missing, insert new, update existing).
-        // For this step, I'll log a warning or try a basic update.
-        await dbRequest.updateRoadmap({ ...roadmap, ...data } as Roadmap);
-      }
+      // We merge existing roadmap with updates to ensure we have all fields (like shareId)
+      const roadmapToSave = { ...existingRoadmap, ...updates };
+      await dbRequest.updateRoadmap(roadmapToSave as Roadmap);
     }
   };
 

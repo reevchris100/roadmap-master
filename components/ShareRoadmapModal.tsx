@@ -19,13 +19,19 @@ export const ShareRoadmapModal: React.FC<ShareRoadmapModalProps> = ({ isOpen, on
     setIsPublic(roadmap.isPublic);
   }, [roadmap.isPublic, isOpen]);
 
-  const handleTogglePublic = () => {
+  const handleTogglePublic = async () => {
     const newPublicState = !isPublic;
-    setIsPublic(newPublicState);
-    updateRoadmap(roadmap.id, { isPublic: newPublicState });
+    try {
+      setIsPublic(newPublicState);
+      await updateRoadmap(roadmap.id, { isPublic: newPublicState });
+    } catch (error) {
+      console.error("Failed to update public status:", error);
+      setIsPublic(!newPublicState); // Revert
+      alert("Failed to share roadmap. Please ensuring you have run the database migration: ALTER TABLE roadmaps ADD COLUMN public_until timestamp with time zone;");
+    }
   };
 
-  const shareLink = roadmap.shareId 
+  const shareLink = roadmap.shareId
     ? `${window.location.origin}/share/${roadmap.shareId}`
     : '';
 
@@ -58,9 +64,9 @@ export const ShareRoadmapModal: React.FC<ShareRoadmapModalProps> = ({ isOpen, on
             <div className="flex justify-between items-center">
               <p className="text-sm font-medium">Public Access</p>
               <label htmlFor="public-toggle" className="relative inline-flex items-center cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  id="public-toggle" 
+                <input
+                  type="checkbox"
+                  id="public-toggle"
                   className="sr-only peer"
                   checked={isPublic}
                   onChange={handleTogglePublic}
@@ -69,7 +75,7 @@ export const ShareRoadmapModal: React.FC<ShareRoadmapModalProps> = ({ isOpen, on
               </label>
             </div>
           </div>
-          
+
           {isPublic && roadmap.shareId && (
             <div className="mt-4">
               <label className="text-sm font-medium">Shareable Link</label>
@@ -92,7 +98,7 @@ export const ShareRoadmapModal: React.FC<ShareRoadmapModalProps> = ({ isOpen, on
 
           {!isPublic && (
             <div className="mt-4 text-center text-sm text-muted-foreground bg-secondary/50 p-4 rounded-md">
-                Enable public access to generate a shareable link.
+              Enable public access to generate a shareable link.
             </div>
           )}
 
