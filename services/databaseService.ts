@@ -64,7 +64,12 @@ export const dbRequest = {
             .single();
 
         if (error) {
-            // It might fail if not found
+            return null;
+        }
+
+        // Check Expiration
+        if (data.public_until && new Date(data.public_until) < new Date()) {
+            console.warn("Roadmap link expired");
             return null;
         }
 
@@ -125,17 +130,27 @@ export const dbRequest = {
     },
 
     updateRoadmap: async (roadmap: Roadmap) => {
-        // Simplest update strategy: Update top level, then maybe reconcile milestones?
-        // Real-world sync is hard. For MVP, we might just update fields.
-        // Or, since we have the full object, we could upsert.
+        // ... (existing update logic)
 
-        const { error } = await supabase.from('roadmaps').update({
+        const updates: any = {
             title: roadmap.title,
             description: roadmap.description,
             is_public: roadmap.isPublic,
+            share_id: roadmap.shareId,
             category: roadmap.category
-            // other fields...
-        }).eq('id', roadmap.id);
+        };
+
+        // Set 1 Hour Expiration for User Roadmaps when made public
+        if (roadmap.isPublic && !roadmap.isTemplate) {
+            const expiration = new Date();
+            expiration.setHours(expiration.getHours() + 1);
+            updates.public_until = expiration.toISOString();
+        } else if (!roadmap.isPublic) {
+            // Clear expiration if made private
+            updates.public_until = null;
+        }
+
+        const { error } = await supabase.from('roadmaps').update(updates).eq('id', roadmap.id);
 
         if (error) throw error;
     },
