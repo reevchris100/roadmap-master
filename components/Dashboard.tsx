@@ -85,60 +85,61 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap }) => {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground mt-1">Create, track, and master your goals.</p>
+          {/* <p className="text-muted-foreground mt-1">Create, track, and master your goals.</p> */}
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleAction(() => setIsNewRoadmapModalOpen(true), "Sign in to create a new roadmap")}
-            className="flex items-center justify-center gap-2 bg-secondary hover:bg-secondary/80 text-foreground font-medium py-2 px-4 rounded-md transition-colors"
-          >
-            <PlusIcon />
-            New Roadmap
-          </button>
-          <button
-            onClick={() => handleAction(() => setIsAiModalOpen(true), "Sign in to use AI generation")}
-            className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 px-4 rounded-md transition-colors"
-          >
-            <SparklesIcon />
-            Generate with AI
-          </button>
+
+        <div className="flex flex-col sm:flex-row w-full lg:w-auto items-center gap-3">
+          <div className="w-full sm:w-64">
+            <input
+              type="text"
+              placeholder="Search roadmaps..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-input border border-border rounded-md py-2 px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => handleAction(() => setIsNewRoadmapModalOpen(true), "Sign in to create a new roadmap")}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-secondary hover:bg-secondary/80 text-foreground font-medium py-2 px-3 text-sm rounded-md transition-colors whitespace-nowrap"
+            >
+              <PlusIcon className="w-4 h-4" />
+              New
+            </button>
+            <button
+              onClick={() => handleAction(() => setIsAiModalOpen(true), "Sign in to use AI generation")}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 px-3 text-sm rounded-md transition-colors whitespace-nowrap"
+            >
+              <SparklesIcon className="w-4 h-4" />
+              AI Generate
+            </button>
+          </div>
         </div>
       </div>
 
-      <div>
-        <input
-          type="text"
-          placeholder="Search roadmaps..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-input border border-border rounded-md py-2 px-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-      </div>
+      {/* Removed separate search bar div */}
 
-      <div className="mt-12 mb-8">
-        <div className="text-center mb-8">
-          <h3 className="text-2xl font-bold tracking-tight mb-2">Role-based Roadmaps</h3>
-          <p className="text-muted-foreground">Select a category to explore curated learning paths.</p>
+      <div className="mt-6 mb-6">
+        <div className="text-center mb-4">
+          <h3 className="text-xl font-bold tracking-tight mb-1">Role-based Roadmaps</h3>
+          <p className="text-sm text-muted-foreground">Select a category to explore curated learning paths.</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
           {categories.map(category => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`p-4 rounded-lg border text-left transition-all hover:shadow-md flex justify-between items-center group bg-card ${selectedCategory === category
-                  ? 'border-primary ring-1 ring-primary'
-                  : 'border-border hover:border-primary/50'
+              className={`p-2 rounded-md border text-center transition-all hover:shadow-sm bg-card ${selectedCategory === category
+                ? 'border-primary ring-1 ring-primary'
+                : 'border-border hover:border-primary/50'
                 }`}
             >
-              <span className={`font-semibold ${selectedCategory === category ? 'text-primary' : 'text-card-foreground'}`}>
+              <span className={`text-xs font-medium ${selectedCategory === category ? 'text-primary' : 'text-card-foreground'}`}>
                 {category}
-              </span>
-              <span className={`text-muted-foreground group-hover:text-primary transition-colors ${selectedCategory === category ? 'text-primary' : ''}`}>
-                &rarr;
               </span>
             </button>
           ))}
