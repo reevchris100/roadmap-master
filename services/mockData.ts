@@ -20,6 +20,7 @@ export const mockRoadmaps: Roadmap[] = [
     userId: 'user_1',
     createdAt: new Date('2023-10-26'),
     isTemplate: true,
+    shareId: 'template-react-mastery',
     category: 'Tech',
     milestones: [
       {
@@ -60,11 +61,12 @@ export const mockRoadmaps: Roadmap[] = [
     id: 'roadmap_2',
     title: 'Launch a SaaS Product',
     description: 'From idea to launch, this roadmap covers the essential steps to get your SaaS business off the ground.',
-    isPublic: false,
+    isPublic: true,
     userId: 'user_1',
     createdAt: new Date('2024-01-15'),
     isTemplate: true,
     category: 'Business',
+    shareId: 'template-saas-launch',
     milestones: [
       {
         id: 'milestone_2_1',
@@ -93,7 +95,8 @@ export const mockRoadmaps: Roadmap[] = [
     isPublic: true,
     userId: 'user_1',
     createdAt: new Date('2024-02-10'),
-    isTemplate: true, // Tagged as template
+    isTemplate: true,
+    shareId: 'template-gen-ai',
     category: 'AI',
     milestones: [{ id: 'm3_1', roadmapId: 'roadmap_3', title: 'What is LLM?', description: 'Concept of Large Language Models', status: MilestoneStatus.PLANNED, order: 1, resources: [] }]
   },
@@ -104,7 +107,8 @@ export const mockRoadmaps: Roadmap[] = [
     isPublic: true,
     userId: 'user_1',
     createdAt: new Date('2024-02-12'),
-    isTemplate: true, // Tagged as template
+    isTemplate: true,
+    shareId: 'template-system-design',
     category: 'System Design',
     milestones: [{ id: 'm4_1', roadmapId: 'roadmap_4', title: 'Vertical vs Horizontal Scaling', description: 'Basics of scaling', status: MilestoneStatus.PLANNED, order: 1, resources: [] }]
   },
@@ -115,7 +119,8 @@ export const mockRoadmaps: Roadmap[] = [
     isPublic: true,
     userId: 'user_1',
     createdAt: new Date('2024-02-15'),
-    isTemplate: true, // Tagged as template
+    isTemplate: true,
+    shareId: 'template-finance-mastery',
     category: 'Finance',
     milestones: [{ id: 'm5_1', roadmapId: 'roadmap_5', title: 'Tracking Expenses', description: 'Know where your money goes', status: MilestoneStatus.PLANNED, order: 1, resources: [] }]
   },

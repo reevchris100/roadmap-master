@@ -48,6 +48,28 @@ export const dbRequest = {
         return mapDbResponseToRoadmaps(data);
     },
 
+    getPublicRoadmap: async (shareId: string): Promise<Roadmap | null> => {
+        const { data, error } = await supabase
+            .from('roadmaps')
+            .select(`
+                *,
+                milestones (
+                  *,
+                  resources (*)
+                )
+            `)
+            .eq('share_id', shareId)
+            .or('is_public.eq.true,is_template.eq.true') // Ensure it is public OR a template
+            .single();
+
+        if (error) {
+            // It might fail if not found
+            return null;
+        }
+
+        return mapDbResponseToRoadmaps([data])[0];
+    },
+
     createRoadmap: async (roadmap: Roadmap) => {
         // Insert Roadmap
         const { error: rError } = await supabase
