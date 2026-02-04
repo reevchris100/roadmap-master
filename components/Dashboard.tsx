@@ -22,7 +22,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [selectedCategory, setSelectedCategory] = useState('All');
 
   const categories = [
-    'All', 'Tech', 'Finance', 'AI', 'Business', 'Leetcode', 'Interviews', 'System Design'
+    'All', 'Tech', 'AI', 'Business', 'Leetcode', 'Interviews', 'System Design'
   ];
 
   const filteredRoadmaps = useMemo(() => {
@@ -81,10 +81,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <div className="mt-1 mb-6">
           <div className="text-center mb-4">
             <h3 className="text-xl font-bold tracking-tight mb-1">Role-based Roadmaps</h3>
-            <p className="text-sm text-muted-foreground">Select a category to explore curated learning paths.</p>
           </div>
 
-          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-2">
             {categories.map(category => (
               <button
                 key={category}
@@ -111,7 +110,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
         />
       )}
 
-      <RoadmapGrid roadmaps={userRoadmaps} title={showOnlyUserRoadmaps ? "" : "Your Roadmaps"} />
+      {showOnlyUserRoadmaps && (
+        <RoadmapGrid roadmaps={userRoadmaps} title="" />
+      )}
 
       {editingRoadmap && (
         <EditRoadmapModal
