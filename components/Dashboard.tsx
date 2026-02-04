@@ -40,9 +40,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
   });
 
   const RoadmapGrid = ({ roadmaps, title, isTemplate = false }: { roadmaps: Roadmap[], title: string, isTemplate?: boolean }) => (
-    <div className="mt-12">
-      <h3 className="text-xl font-semibold tracking-tight">{title}</h3>
-      <hr className="border-border my-4" />
+    <div className="mt-8">
+      {title && (
+        <>
+          <h3 className="text-xl font-semibold tracking-tight">{title}</h3>
+          <hr className="border-border my-4" />
+        </>
+      )}
       {roadmaps.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {roadmaps.map(roadmap => (
@@ -74,7 +78,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     <div>
 
       {!showOnlyUserRoadmaps && (
-        <div className="mt-6 mb-6">
+        <div className="mt-1 mb-6">
           <div className="text-center mb-4">
             <h3 className="text-xl font-bold tracking-tight mb-1">Role-based Roadmaps</h3>
             <p className="text-sm text-muted-foreground">Select a category to explore curated learning paths.</p>
@@ -102,7 +106,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {!showOnlyUserRoadmaps && (
         <RoadmapGrid
           roadmaps={templateRoadmaps}
-          title={selectedCategory === 'All' ? "Pre-defined Roadmaps" : `${selectedCategory} Pre-defined Roadmaps`}
+          title=""
           isTemplate
         />
       )}
