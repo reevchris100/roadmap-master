@@ -30,34 +30,52 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [isGuest]);
 
   useEffect(() => {
+    // Safety timeout to prevent infinite loading state
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        if (session) {
-          // Fetch profile to get subscription status
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+        try {
+          if (session) {
+            // Fetch profile to get subscription status
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
 
-          const user: User = {
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata.full_name || session.user.email,
-            subscriptionStatus: profile?.subscription_status === 'PRO' ? SubscriptionStatus.PRO : SubscriptionStatus.FREE,
-            createdAt: new Date(session.user.created_at),
-          };
-          setCurrentUser(user);
-          setIsGuest(false);
-        } else {
+            if (error && error.code !== 'PGRST116') {
+              console.error('Error fetching profile:', error);
+            }
+
+            const user: User = {
+              id: session.user.id,
+              email: session.user.email || '',
+              name: session.user.user_metadata?.full_name || session.user.email,
+              subscriptionStatus: profile?.subscription_status === 'PRO' ? SubscriptionStatus.PRO : SubscriptionStatus.FREE,
+              createdAt: new Date(session.user.created_at),
+            };
+            setCurrentUser(user);
+            setIsGuest(false);
+          } else {
+            setCurrentUser(null);
+          }
+        } catch (error) {
+          console.error("Auth initialization error:", error);
+          // Fallback: treat as logged out or guest if error occurs
           setCurrentUser(null);
+        } finally {
+          setLoading(false);
+          clearTimeout(timeoutId);
         }
-        setLoading(false);
       }
     );
 
     return () => {
       subscription?.unsubscribe();
+      clearTimeout(timeoutId);
     };
   }, []);
 
