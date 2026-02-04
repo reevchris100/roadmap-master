@@ -111,11 +111,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    setCurrentUser(null);
-    setIsGuest(false);
-    localStorage.removeItem('isGuest');
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Sign out error:", error);
+    } finally {
+      setCurrentUser(null);
+      setIsGuest(false);
+      localStorage.removeItem('isGuest');
+    }
   };
 
   const upgradeSubscription = async (orderId: string) => {
