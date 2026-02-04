@@ -1,31 +1,24 @@
 import React, { useState, useMemo } from 'react';
 import { RoadmapCard } from './RoadmapCard';
 import { useData } from '../contexts/DataContext';
-import { AIGenerationModal } from './AIGenerationModal';
-import { NewRoadmapModal } from './NewRoadmapModal';
-import { PlusIcon, SparklesIcon } from './icons/Icons';
 import type { Roadmap } from '../types';
 import { EditRoadmapModal } from './EditRoadmapModal';
-import { useAuth } from '../contexts/AuthContext';
-import { AuthModal } from './AuthModal';
-import { RazorpayModal } from './RazorpayModal';
 
 interface DashboardProps {
   onSelectRoadmap: (id: string) => void;
   showOnlyUserRoadmaps?: boolean;
+  searchTerm?: string;
+  requireAuth?: (action: () => void, message: string) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap, showOnlyUserRoadmaps = false }) => {
-  const { roadmaps, calculateProgress, deleteRoadmap, addRoadmap, updateRoadmap } = useData();
-  const { isGuest, currentUser, upgradeSubscription } = useAuth();
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-  const [isNewRoadmapModalOpen, setIsNewRoadmapModalOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isRazorpayModalOpen, setIsRazorpayModalOpen] = useState(false);
-  const [authModalMessage, setAuthModalMessage] = useState("");
-  const [searchTerm, setSearchTerm] = useState('');
+export const Dashboard: React.FC<DashboardProps> = ({
+  onSelectRoadmap,
+  showOnlyUserRoadmaps = false,
+  searchTerm = '',
+  requireAuth
+}) => {
+  const { roadmaps, calculateProgress, deleteRoadmap, updateRoadmap } = useData();
   const [editingRoadmap, setEditingRoadmap] = useState<Roadmap | null>(null);
-
   const [selectedCategory, setSelectedCategory] = useState('All');
 
   const categories = [
@@ -46,32 +39,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap, showOnlyU
     return r.category === selectedCategory;
   });
 
-  const checkLimitAndProceed = (action: () => void) => {
-    // Recalculate true total for limit check (ignoring search filter)
-    const totalUserRoadmaps = roadmaps.filter(r => !r.isTemplate).length;
-
-    // Check Free Limit (3)
-    if (currentUser?.subscriptionStatus === 'FREE' && totalUserRoadmaps >= 3) {
-      setIsRazorpayModalOpen(true);
-      return;
-    }
-    // Check Pro Limit (5)
-    if (currentUser?.subscriptionStatus === 'PRO' && totalUserRoadmaps >= 5) {
-      alert("You have reached the limit for Pro plan (5 roadmaps).");
-      return;
-    }
-    action();
-  };
-
-  const requireAuth = (action: () => void, message: string) => {
-    if (isGuest) {
-      setAuthModalMessage(message);
-      setIsAuthModalOpen(true);
-    } else {
-      action();
-    }
-  };
-
   const RoadmapGrid = ({ roadmaps, title, isTemplate = false }: { roadmaps: Roadmap[], title: string, isTemplate?: boolean }) => (
     <div className="mt-12">
       <h3 className="text-xl font-semibold tracking-tight">{title}</h3>
@@ -89,7 +56,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap, showOnlyU
                 } else if (isTemplate) {
                   onSelectRoadmap(roadmap.id);
                 } else {
-                  requireAuth(() => onSelectRoadmap(roadmap.id), "Sign in to view roadmap details");
+                  requireAuth?.(() => onSelectRoadmap(roadmap.id), "Sign in to view roadmap details");
                 }
               }}
               onDelete={!isTemplate ? deleteRoadmap : undefined}
@@ -105,41 +72,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap, showOnlyU
 
   return (
     <div>
-
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">{showOnlyUserRoadmaps ? 'Your Roadmaps' : 'Dashboard'}</h2>
-        </div>
-
-        <div className="flex flex-col sm:flex-row w-full lg:w-auto items-center gap-3">
-          <div className="w-full sm:w-64">
-            <input
-              type="text"
-              placeholder="Search roadmaps..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-input border border-border rounded-md py-2 px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button
-              onClick={() => requireAuth(() => checkLimitAndProceed(() => setIsNewRoadmapModalOpen(true)), "Sign in to create a new roadmap")}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-secondary hover:bg-secondary/80 text-foreground font-medium py-2 px-3 text-sm rounded-md transition-colors whitespace-nowrap"
-            >
-              <PlusIcon className="w-4 h-4" />
-              New
-            </button>
-            <button
-              onClick={() => requireAuth(() => checkLimitAndProceed(() => setIsAiModalOpen(true)), "Sign in to use AI generation")}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 px-3 text-sm rounded-md transition-colors whitespace-nowrap"
-            >
-              <SparklesIcon className="w-4 h-4" />
-              AI Generate
-            </button>
-          </div>
-        </div>
-      </div>
-
 
       {!showOnlyUserRoadmaps && (
         <div className="mt-6 mb-6">
@@ -177,16 +109,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap, showOnlyU
 
       <RoadmapGrid roadmaps={userRoadmaps} title={showOnlyUserRoadmaps ? "" : "Your Roadmaps"} />
 
-      <AIGenerationModal
-        isOpen={isAiModalOpen}
-        onClose={() => setIsAiModalOpen(false)}
-        onRoadmapGenerated={addRoadmap}
-      />
-      <NewRoadmapModal
-        isOpen={isNewRoadmapModalOpen}
-        onClose={() => setIsNewRoadmapModalOpen(false)}
-        onRoadmapCreated={addRoadmap}
-      />
       {editingRoadmap && (
         <EditRoadmapModal
           isOpen={!!editingRoadmap}
@@ -198,20 +120,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap, showOnlyU
           }}
         />
       )}
-
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        message={authModalMessage}
-      />
-
-      <RazorpayModal
-        isOpen={isRazorpayModalOpen}
-        onClose={() => setIsRazorpayModalOpen(false)}
-        onSuccess={(paymentId) => {
-          upgradeSubscription(paymentId);
-        }}
-      />
     </div>
   );
 };

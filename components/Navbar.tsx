@@ -7,15 +7,17 @@ import type { Page } from '../types';
 interface NavbarProps {
   onMenuClick: () => void;
   navigateTo: (page: Page) => void;
+  headerControls?: React.ReactNode;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onMenuClick, navigateTo }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onMenuClick, navigateTo, headerControls }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { currentUser, isGuest, logout, loginWithGoogle, loginAsGuest } = useAuth();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // implementation details...
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
@@ -35,12 +37,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick, navigateTo }) => {
 
   return (
     <header className="flex-shrink-0 bg-background border-b border-border h-16 flex items-center justify-between px-4 sm:px-6 lg:p-8">
-      <button
-        onClick={onMenuClick}
-        className="lg:hidden text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <MenuIcon />
-      </button>
+      <div className="flex items-center gap-4 flex-1">
+        <button
+          onClick={onMenuClick}
+          className="lg:hidden text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <MenuIcon />
+        </button>
+        {headerControls && (
+          <div className="hidden md:flex flex-1 max-w-2xl">
+            {headerControls}
+          </div>
+        )}
+      </div>
       <div className="w-full flex items-center justify-end gap-4">
         <a
           href="https://buymeacoffee.com/reevchris"
