@@ -45,10 +45,7 @@ const AppContent: React.FC = () => {
 
   console.log('App Render:', { currentUser, isGuest, currentPage });
 
-  if (!currentUser && !isGuest) {
-    console.log('Redirecting to Login');
-    return <LoginPage />;
-  }
+
 
   const renderContent = () => {
     switch (currentPage) {

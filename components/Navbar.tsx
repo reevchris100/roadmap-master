@@ -12,7 +12,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ onMenuClick, navigateTo }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { currentUser, isGuest, logout } = useAuth();
+  const { currentUser, isGuest, logout, loginWithGoogle, loginAsGuest } = useAuth();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -23,8 +23,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick, navigateTo }) => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  if (!currentUser && !isGuest) return null;
 
   const handleProfileClick = () => {
     if (isGuest) return;
@@ -54,47 +52,64 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick, navigateTo }) => {
           Donate
         </a>
 
-        <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center space-x-2"
-          >
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isGuest ? 'bg-orange-100 text-orange-600' : 'bg-secondary'}`}>
-              <UserIcon />
-            </div>
-            <span className="hidden sm:inline text-sm font-medium">{displayName}</span>
-            {currentUser?.subscriptionStatus === 'PRO' && (
-              <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">
-                PRO
-              </span>
-            )}
-          </button>
-
-          {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-popover border border-border rounded-md shadow-lg py-1 z-50">
-              <div className="px-4 py-2 border-b border-border">
-                <p className="text-sm font-semibold">{displayName}</p>
-                <p className="text-xs text-muted-foreground truncate">{displayEmail}</p>
+        {(!currentUser && !isGuest) ? (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={loginAsGuest}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Guest
+            </button>
+            <button
+              onClick={loginWithGoogle}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium py-2 px-4 rounded-md transition-colors"
+            >
+              Sign in with Google
+            </button>
+          </div>
+        ) : (
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center space-x-2"
+            >
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isGuest ? 'bg-orange-100 text-orange-600' : 'bg-secondary'}`}>
+                <UserIcon />
               </div>
-              {!isGuest && (
+              <span className="hidden sm:inline text-sm font-medium">{displayName}</span>
+              {currentUser?.subscriptionStatus === 'PRO' && (
+                <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">
+                  PRO
+                </span>
+              )}
+            </button>
+
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-popover border border-border rounded-md shadow-lg py-1 z-50">
+                <div className="px-4 py-2 border-b border-border">
+                  <p className="text-sm font-semibold">{displayName}</p>
+                  <p className="text-xs text-muted-foreground truncate">{displayEmail}</p>
+                </div>
+                {!isGuest && (
+                  <button
+                    onClick={handleProfileClick}
+                    className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  >
+                    <UserIcon className="w-4 h-4" />
+                    Profile
+                  </button>
+                )}
                 <button
-                  onClick={handleProfileClick}
+                  onClick={logout}
                   className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
                 >
-                  <UserIcon className="w-4 h-4" />
-                  Profile
+                  <LogoutIcon className="w-4 h-4" />
+                  Logout
                 </button>
-              )}
-              <button
-                onClick={logout}
-                className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
-              >
-                <LogoutIcon className="w-4 h-4" />
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );
