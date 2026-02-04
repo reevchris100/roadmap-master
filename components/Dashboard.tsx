@@ -63,12 +63,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap, showOnlyU
     action();
   };
 
-  const handleAction = (action: () => void, message: string) => {
+  const requireAuth = (action: () => void, message: string) => {
     if (isGuest) {
       setAuthModalMessage(message);
       setIsAuthModalOpen(true);
     } else {
-      checkLimitAndProceed(action);
+      action();
     }
   };
 
@@ -89,7 +89,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap, showOnlyU
                 } else if (isTemplate) {
                   onSelectRoadmap(roadmap.id);
                 } else {
-                  handleAction(() => onSelectRoadmap(roadmap.id), "Sign in to view roadmap details");
+                  requireAuth(() => onSelectRoadmap(roadmap.id), "Sign in to view roadmap details");
                 }
               }}
               onDelete={!isTemplate ? deleteRoadmap : undefined}
@@ -123,14 +123,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap, showOnlyU
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
-              onClick={() => handleAction(() => setIsNewRoadmapModalOpen(true), "Sign in to create a new roadmap")}
+              onClick={() => requireAuth(() => checkLimitAndProceed(() => setIsNewRoadmapModalOpen(true)), "Sign in to create a new roadmap")}
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-secondary hover:bg-secondary/80 text-foreground font-medium py-2 px-3 text-sm rounded-md transition-colors whitespace-nowrap"
             >
               <PlusIcon className="w-4 h-4" />
               New
             </button>
             <button
-              onClick={() => handleAction(() => setIsAiModalOpen(true), "Sign in to use AI generation")}
+              onClick={() => requireAuth(() => checkLimitAndProceed(() => setIsAiModalOpen(true)), "Sign in to use AI generation")}
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 px-3 text-sm rounded-md transition-colors whitespace-nowrap"
             >
               <SparklesIcon className="w-4 h-4" />
