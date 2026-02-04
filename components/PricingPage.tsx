@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { CheckIcon } from './icons/Icons';
-import { PayPalModal } from './PayPalModal';
+import { RazorpayModal } from './RazorpayModal';
 import { useAuth } from '../contexts/AuthContext';
 
 const PricingCard: React.FC<{
@@ -15,18 +14,18 @@ const PricingCard: React.FC<{
   const buttonClasses = isFeatured
     ? 'bg-primary text-primary-foreground hover:bg-primary/90'
     : 'bg-secondary text-secondary-foreground hover:bg-secondary/80';
-  
+
   const cardClasses = isFeatured
     ? 'border-primary shadow-lg shadow-primary/10'
     : 'border-border';
 
   const handleSubscription = () => {
     if (price === 'Free') {
-        alert('Getting started with the Free plan!');
-        return;
+      alert('Getting started with the Free plan!');
+      return;
     }
     if (onSubscribe) {
-        onSubscribe();
+      onSubscribe();
     }
   }
 
@@ -46,7 +45,7 @@ const PricingCard: React.FC<{
           </li>
         ))}
       </ul>
-      <button 
+      <button
         onClick={handleSubscription}
         className={`mt-auto w-full rounded-md py-2.5 font-semibold transition-colors ${buttonClasses}`}
       >
@@ -58,7 +57,7 @@ const PricingCard: React.FC<{
 
 export const PricingPage: React.FC = () => {
   const { upgradeSubscription } = useAuth();
-  const [isPayPalModalOpen, setIsPayPalModalOpen] = useState(false);
+  const [isRazorpayModalOpen, setIsRazorpayModalOpen] = useState(false);
 
   return (
     <>
@@ -76,29 +75,29 @@ export const PricingPage: React.FC = () => {
             price="Free"
             description="Perfect for getting started and exploring."
             features={[
-              'Create 1 Roadmap',
+              'Create up to 3 Roadmaps',
               'Public access only',
               'Community support',
             ]}
           />
           <PricingCard
             plan="Pro"
-            price="$10"
+            price="$5"
             description="For professionals and teams who need more power."
             features={[
-              'Create up to 5 Roadmaps',
+              'Unlimited Roadmaps',
               'Private & public roadmaps',
               'AI-powered generation',
               'Priority email support',
             ]}
             isFeatured
-            onSubscribe={() => setIsPayPalModalOpen(true)}
+            onSubscribe={() => setIsRazorpayModalOpen(true)}
           />
         </div>
       </div>
-      <PayPalModal 
-        isOpen={isPayPalModalOpen}
-        onClose={() => setIsPayPalModalOpen(false)}
+      <RazorpayModal
+        isOpen={isRazorpayModalOpen}
+        onClose={() => setIsRazorpayModalOpen(false)}
         onSuccess={upgradeSubscription}
       />
     </>

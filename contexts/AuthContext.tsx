@@ -13,7 +13,7 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   loginAsGuest: () => void;
   logout: () => void;
-  upgradeSubscription: () => void;
+  upgradeSubscription: (orderId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,13 +31,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         if (session) {
+          // Fetch profile to get subscription status
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
           const user: User = {
             id: session.user.id,
             email: session.user.email || '',
             name: session.user.user_metadata.full_name || session.user.email,
-            subscriptionStatus: SubscriptionStatus.FREE, // Default for new users
+            subscriptionStatus: profile?.subscription_status === 'PRO' ? SubscriptionStatus.PRO : SubscriptionStatus.FREE,
             createdAt: new Date(session.user.created_at),
           };
           setCurrentUser(user);
@@ -67,6 +74,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         emailRedirectTo: window.location.origin,
       }
     });
+    // Triggers will handle profile creation
     if (error) throw error;
   }
 
@@ -92,16 +100,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem('isGuest');
   };
 
-  const upgradeSubscription = () => {
+  const upgradeSubscription = async (orderId: string) => {
     if (currentUser) {
+      // Update DB
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          subscription_status: 'PRO',
+          subscription_id: orderId
+        })
+        .eq('id', currentUser.id);
+
+      if (error) {
+        console.error("Failed to upgrade subscription in DB:", error);
+        alert("Payment successful but database update failed. Please contact support.");
+        return;
+      }
+
       const updatedUser = {
         ...currentUser,
         subscriptionStatus: SubscriptionStatus.PRO,
-        paypalSubscriptionId: `sub_${Date.now()}`
       };
       setCurrentUser(updatedUser);
-      // In a real app, you would also save this to your database.
-      // e.g., supabase.from('users').update({ ... }).eq('id', currentUser.id)
     }
   };
 

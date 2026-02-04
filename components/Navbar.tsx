@@ -63,6 +63,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick, navigateTo }) => {
               <UserIcon />
             </div>
             <span className="hidden sm:inline text-sm font-medium">{displayName}</span>
+            {currentUser?.subscriptionStatus === 'PRO' && (
+              <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">
+                PRO
+              </span>
+            )}
           </button>
 
           {isDropdownOpen && (

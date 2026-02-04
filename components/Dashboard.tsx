@@ -8,7 +8,7 @@ import type { Roadmap } from '../types';
 import { EditRoadmapModal } from './EditRoadmapModal';
 import { useAuth } from '../contexts/AuthContext';
 import { AuthModal } from './AuthModal';
-import { PayPalModal } from './PayPalModal';
+import { RazorpayModal } from './RazorpayModal';
 
 interface DashboardProps {
   onSelectRoadmap: (id: string) => void;
@@ -20,7 +20,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap }) => {
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isNewRoadmapModalOpen, setIsNewRoadmapModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isPayPalModalOpen, setIsPayPalModalOpen] = useState(false);
+  const [isRazorpayModalOpen, setIsRazorpayModalOpen] = useState(false);
   const [authModalMessage, setAuthModalMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState('');
   const [editingRoadmap, setEditingRoadmap] = useState<Roadmap | null>(null);
@@ -51,7 +51,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap }) => {
 
     // Check Free Limit (3)
     if (currentUser?.subscriptionStatus === 'FREE' && totalUserRoadmaps >= 3) {
-      setIsPayPalModalOpen(true);
+      setIsRazorpayModalOpen(true);
       return;
     }
     // Check Pro Limit (5)
@@ -139,8 +139,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap }) => {
         </div>
       </div>
 
-      {/* Removed separate search bar div */}
-
       <div className="mt-6 mb-6">
         <div className="text-center mb-4">
           <h3 className="text-xl font-bold tracking-tight mb-1">Role-based Roadmaps</h3>
@@ -200,11 +198,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap }) => {
         message={authModalMessage}
       />
 
-      <PayPalModal
-        isOpen={isPayPalModalOpen}
-        onClose={() => setIsPayPalModalOpen(false)}
-        onSuccess={() => {
-          upgradeSubscription();
+      <RazorpayModal
+        isOpen={isRazorpayModalOpen}
+        onClose={() => setIsRazorpayModalOpen(false)}
+        onSuccess={(paymentId) => {
+          upgradeSubscription(paymentId);
         }}
       />
     </div>
