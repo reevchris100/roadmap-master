@@ -61,22 +61,25 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick, navigateTo, headerC
           Donate
         </a>
 
-        {(!currentUser && !isGuest) ? (
-          <div className="flex items-center gap-3">
-            <button
-              onClick={loginAsGuest}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Guest
-            </button>
-            <button
-              onClick={loginWithGoogle}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium py-2 px-4 rounded-md transition-colors"
-            >
-              Sign in with Google
-            </button>
-          </div>
-        ) : (
+        {!currentUser && !isGuest && (
+          <button
+            onClick={loginAsGuest}
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Guest
+          </button>
+        )}
+
+        {!currentUser && (
+          <button
+            onClick={loginWithGoogle}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium py-2 px-4 rounded-md transition-colors whitespace-nowrap"
+          >
+            Sign in with Google
+          </button>
+        )}
+
+        {(currentUser || isGuest) && (
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
