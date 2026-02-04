@@ -12,9 +12,10 @@ import { RazorpayModal } from './RazorpayModal';
 
 interface DashboardProps {
   onSelectRoadmap: (id: string) => void;
+  showOnlyUserRoadmaps?: boolean;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap, showOnlyUserRoadmaps = false }) => {
   const { roadmaps, calculateProgress, deleteRoadmap, addRoadmap, updateRoadmap } = useData();
   const { isGuest, currentUser, upgradeSubscription } = useAuth();
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -104,10 +105,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap }) => {
 
   return (
     <div>
+
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          {/* <p className="text-muted-foreground mt-1">Create, track, and master your goals.</p> */}
+          <h2 className="text-3xl font-bold tracking-tight">{showOnlyUserRoadmaps ? 'Your Roadmaps' : 'Dashboard'}</h2>
         </div>
 
         <div className="flex flex-col sm:flex-row w-full lg:w-auto items-center gap-3">
@@ -139,36 +140,42 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectRoadmap }) => {
         </div>
       </div>
 
-      <div className="mt-6 mb-6">
-        <div className="text-center mb-4">
-          <h3 className="text-xl font-bold tracking-tight mb-1">Role-based Roadmaps</h3>
-          <p className="text-sm text-muted-foreground">Select a category to explore curated learning paths.</p>
-        </div>
 
-        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-          {categories.map(category => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`p-2 rounded-md border text-center transition-all hover:shadow-sm bg-card ${selectedCategory === category
-                ? 'border-primary ring-1 ring-primary'
-                : 'border-border hover:border-primary/50'
-                }`}
-            >
-              <span className={`text-xs font-medium ${selectedCategory === category ? 'text-primary' : 'text-card-foreground'}`}>
-                {category}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+      {!showOnlyUserRoadmaps && (
+        <div className="mt-6 mb-6">
+          <div className="text-center mb-4">
+            <h3 className="text-xl font-bold tracking-tight mb-1">Role-based Roadmaps</h3>
+            <p className="text-sm text-muted-foreground">Select a category to explore curated learning paths.</p>
+          </div>
 
-      <RoadmapGrid
-        roadmaps={templateRoadmaps}
-        title={selectedCategory === 'All' ? "Pre-defined Roadmaps" : `${selectedCategory} Pre-defined Roadmaps`}
-        isTemplate
-      />
-      <RoadmapGrid roadmaps={userRoadmaps} title="Your Roadmaps" />
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+            {categories.map(category => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`p-2 rounded-md border text-center transition-all hover:shadow-sm bg-card ${selectedCategory === category
+                  ? 'border-primary ring-1 ring-primary'
+                  : 'border-border hover:border-primary/50'
+                  }`}
+              >
+                <span className={`text-xs font-medium ${selectedCategory === category ? 'text-primary' : 'text-card-foreground'}`}>
+                  {category}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!showOnlyUserRoadmaps && (
+        <RoadmapGrid
+          roadmaps={templateRoadmaps}
+          title={selectedCategory === 'All' ? "Pre-defined Roadmaps" : `${selectedCategory} Pre-defined Roadmaps`}
+          isTemplate
+        />
+      )}
+
+      <RoadmapGrid roadmaps={userRoadmaps} title={showOnlyUserRoadmaps ? "" : "Your Roadmaps"} />
 
       <AIGenerationModal
         isOpen={isAiModalOpen}

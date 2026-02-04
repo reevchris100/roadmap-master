@@ -62,4 +62,4 @@ export interface Progress {
   isCompleted: boolean;
 }
 
-export type Page = 'dashboard' | 'roadmapDetail' | 'settings' | 'pricing';
+export type Page = 'dashboard' | 'roadmapDetail' | 'settings' | 'pricing' | 'yourRoadmaps';

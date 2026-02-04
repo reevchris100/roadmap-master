@@ -51,7 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick, navigateTo }) => {
           className="hidden sm:flex items-center justify-center gap-2 bg-secondary hover:bg-secondary/80 text-foreground font-medium py-2 px-3 rounded-md transition-colors text-sm"
         >
           <CoffeeIcon className="w-4 h-4" />
-          Buy me a coffee
+          Donate
         </a>
 
         <div className="relative" ref={dropdownRef}>

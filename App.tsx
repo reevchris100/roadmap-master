@@ -54,6 +54,8 @@ const AppContent: React.FC = () => {
     switch (currentPage) {
       case 'dashboard':
         return <Dashboard onSelectRoadmap={handleSelectRoadmap} />;
+      case 'yourRoadmaps':
+        return <Dashboard onSelectRoadmap={handleSelectRoadmap} showOnlyUserRoadmaps={true} />;
       case 'roadmapDetail':
         if (selectedRoadmapId) {
           return <RoadmapDetail roadmapId={selectedRoadmapId} onBack={() => navigateTo('dashboard')} />;
