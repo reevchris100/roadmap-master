@@ -111,7 +111,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
       )}
 
       {showOnlyUserRoadmaps && (
-        <RoadmapGrid roadmaps={userRoadmaps} title="" />
+        userRoadmaps.length > 0 ? (
+          <RoadmapGrid roadmaps={userRoadmaps} title="" />
+        ) : (
+          <div className="text-center py-20">
+            <h3 className="text-xl font-semibold mb-2">No roadmaps yet</h3>
+            <p className="text-muted-foreground mb-6">Create your first roadmap to get started!</p>
+          </div>
+        )
       )}
 
       {editingRoadmap && (

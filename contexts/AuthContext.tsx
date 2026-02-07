@@ -21,51 +21,65 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Safety timeout to prevent infinite loading state
-    const timeoutId = setTimeout(() => {
-      setLoading(false);
-    }, 5000);
+    let mounted = true;
+
+    async function getInitialSession() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (mounted && session) {
+          await handleUserSession(session);
+        } else if (mounted) {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Error checking initial session:", error);
+        if (mounted) setLoading(false);
+      }
+    }
+
+    async function handleUserSession(session: Session) {
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching profile:', error);
+        }
+
+        const user: User = {
+          id: session.user.id,
+          email: session.user.email || '',
+          name: session.user.user_metadata?.full_name || session.user.email,
+          subscriptionStatus: profile?.subscription_status === 'PRO' ? SubscriptionStatus.PRO : SubscriptionStatus.FREE,
+          createdAt: new Date(session.user.created_at),
+        };
+        setCurrentUser(user);
+      } catch (e) {
+        console.error("Error setting user:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    getInitialSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        try {
-          if (session) {
-            // Fetch profile to get subscription status
-            const { data: profile, error } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
-
-            if (error && error.code !== 'PGRST116') {
-              console.error('Error fetching profile:', error);
-            }
-
-            const user: User = {
-              id: session.user.id,
-              email: session.user.email || '',
-              name: session.user.user_metadata?.full_name || session.user.email,
-              subscriptionStatus: profile?.subscription_status === 'PRO' ? SubscriptionStatus.PRO : SubscriptionStatus.FREE,
-              createdAt: new Date(session.user.created_at),
-            };
-            setCurrentUser(user);
-          } else {
-            setCurrentUser(null);
-          }
-        } catch (error) {
-          console.error("Auth initialization error:", error);
-          // Fallback: treat as logged out or guest if error occurs
+        if (session) {
+          await handleUserSession(session);
+        } else {
           setCurrentUser(null);
-        } finally {
           setLoading(false);
-          clearTimeout(timeoutId);
         }
       }
     );
 
     return () => {
+      mounted = false;
       subscription?.unsubscribe();
-      clearTimeout(timeoutId);
     };
   }, []);
 
