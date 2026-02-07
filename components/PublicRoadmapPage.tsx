@@ -30,9 +30,10 @@ const PublicMilestone: React.FC<{ milestone: MilestoneType }> = ({ milestone }) 
 
 interface PublicRoadmapPageProps {
     shareId: string;
+    onHome?: () => void;
 }
 
-export const PublicRoadmapPage: React.FC<PublicRoadmapPageProps> = ({ shareId }) => {
+export const PublicRoadmapPage: React.FC<PublicRoadmapPageProps> = ({ shareId, onHome }) => {
     const { getRoadmapByShareId } = useData();
     // Initialize from context if available, but don't rely on it effectively being there immediately
     const [roadmap, setRoadmap] = useState<Roadmap | undefined>(() => getRoadmapByShareId(shareId));
@@ -88,6 +89,15 @@ export const PublicRoadmapPage: React.FC<PublicRoadmapPageProps> = ({ shareId })
         // eslint-disable-next-line
     }, [shareId]);
 
+    const handleHomeClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (onHome) {
+            onHome();
+        } else {
+            window.location.href = '/';
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -104,7 +114,7 @@ export const PublicRoadmapPage: React.FC<PublicRoadmapPageProps> = ({ shareId })
                         <SparklesIcon className="w-6 h-6 text-primary" />
                         Roadmap Master
                     </h1>
-                    <a href="/" className="text-sm font-medium text-primary hover:underline">
+                    <a href="/" onClick={handleHomeClick} className="text-sm font-medium text-primary hover:underline">
                         Back to Dashboard
                     </a>
                 </header>
@@ -112,9 +122,9 @@ export const PublicRoadmapPage: React.FC<PublicRoadmapPageProps> = ({ shareId })
                     <div className="text-center max-w-md mx-auto">
                         <h2 className="text-2xl font-bold">Roadmap Not Found</h2>
                         <p className="text-muted-foreground mt-2">This roadmap could not be found or is no longer shared publicly.</p>
-                        <a href="/" className="mt-6 inline-block bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                        <button onClick={handleHomeClick} className="mt-6 inline-block bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
                             Go Home
-                        </a>
+                        </button>
                     </div>
                 </main>
             </div>
@@ -128,7 +138,7 @@ export const PublicRoadmapPage: React.FC<PublicRoadmapPageProps> = ({ shareId })
                     <SparklesIcon className="w-6 h-6 text-primary" />
                     Roadmap Master
                 </h1>
-                <a href="/" className="text-sm font-medium text-primary hover:underline">
+                <a href="/" onClick={handleHomeClick} className="text-sm font-medium text-primary hover:underline">
                     Back to Dashboard
                 </a>
             </header>

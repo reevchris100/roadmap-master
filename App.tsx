@@ -76,8 +76,13 @@ const AppContent: React.FC = () => {
     }
   }, [currentUser]);
 
+  const handleGoHome = useCallback(() => {
+    window.history.pushState({}, '', '/');
+    setPublicShareId(null);
+  }, []);
+
   if (publicShareId) {
-    return <PublicRoadmapPage shareId={publicShareId} />
+    return <PublicRoadmapPage shareId={publicShareId} onHome={handleGoHome} />
   }
 
   const headerControls = (
