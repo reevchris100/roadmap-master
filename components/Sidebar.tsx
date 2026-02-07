@@ -51,9 +51,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, currentPage
         className={`fixed lg:relative inset-y-0 left-0 w-64 bg-background border-r border-border z-40 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
           } lg:translate-x-0`}
       >
-        <div className="flex items-center justify-between h-16 px-6 border-b border-border">
-          <h1 className="text-xl font-bold">Roadmap Master</h1>
-          <button onClick={() => setIsOpen(false)} className="lg:hidden text-muted-foreground">
+        <div className="flex items-center gap-3 px-6 h-16 border-b border-border">
+          <img src="/logo.svg" alt="Roadmap Master" className="h-8 w-auto" />
+          <span className="text-lg font-bold tracking-tight">Roadmap Master</span>
+          <button onClick={() => setIsOpen(false)} className="lg:hidden ml-auto text-muted-foreground">
             <XIcon />
           </button>
         </div>

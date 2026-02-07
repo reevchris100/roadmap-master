@@ -7,11 +7,9 @@ import type { Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   currentUser: User | null;
-  isGuest: boolean;
   login: (email: string, pass: string) => Promise<void>;
   signUp: (email: string, pass: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
-  loginAsGuest: () => void;
   logout: () => void;
   upgradeSubscription: (orderId: string) => Promise<void>;
 }
@@ -20,14 +18,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isGuest, setIsGuest] = useState<boolean>(() => {
-    return localStorage.getItem('isGuest') === 'true';
-  });
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    localStorage.setItem('isGuest', String(isGuest));
-  }, [isGuest]);
 
   useEffect(() => {
     // Safety timeout to prevent infinite loading state
@@ -58,7 +49,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               createdAt: new Date(session.user.created_at),
             };
             setCurrentUser(user);
-            setIsGuest(false);
           } else {
             setCurrentUser(null);
           }
@@ -106,10 +96,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (error) throw error;
   }
 
-  const loginAsGuest = () => {
-    setIsGuest(true);
-  };
-
   const logout = async () => {
     try {
       await supabase.auth.signOut();
@@ -117,8 +103,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error("Sign out error:", error);
     } finally {
       setCurrentUser(null);
-      setIsGuest(false);
-      localStorage.removeItem('isGuest');
     }
   };
 
@@ -147,7 +131,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const value = { currentUser, isGuest, login, signUp, loginWithGoogle, loginAsGuest, logout, upgradeSubscription };
+  const value = { currentUser, login, signUp, loginWithGoogle, logout, upgradeSubscription };
 
   return (
     <AuthContext.Provider value={value}>

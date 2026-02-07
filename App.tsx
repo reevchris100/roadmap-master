@@ -18,7 +18,7 @@ import { RazorpayModal } from './components/RazorpayModal';
 import { SubscriptionStatus } from './types';
 
 const AppContent: React.FC = () => {
-  const { currentUser, isGuest, upgradeSubscription } = useAuth();
+  const { currentUser, upgradeSubscription } = useAuth();
   const { roadmaps, addRoadmap } = useData();
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const [selectedRoadmapId, setSelectedRoadmapId] = useState<string | null>(null);
@@ -68,13 +68,13 @@ const AppContent: React.FC = () => {
   };
 
   const requireAuth = useCallback((action: () => void, message: string) => {
-    if (isGuest) {
+    if (!currentUser) {
       setAuthModalMessage(message);
       setIsAuthModalOpen(true);
     } else {
       action();
     }
-  }, [isGuest]);
+  }, [currentUser]);
 
   if (publicShareId) {
     return <PublicRoadmapPage shareId={publicShareId} />

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Icon Circle Background -->
+  <circle cx="100" cy="100" r="90" fill="none" stroke="#0f172a" stroke-width="12" />
+  
+  <!-- Arrow Path -->
+  <path d="M 40 140 Q 80 80 110 100 T 160 80 L 150 70 M 160 80 L 155 95" fill="none" stroke="#0f172a" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Dashed Line inside path -->
+  <path d="M 40 140 Q 80 80 110 100 T 160 80" fill="none" stroke="#ffffff" stroke-width="4" stroke-dasharray="8,8" />
+
+  <!-- Arrow Head -->
+  <polygon points="160,80 145,75 150,95" fill="#0f172a" />
+</svg>

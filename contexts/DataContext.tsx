@@ -27,7 +27,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Use simple state instead of localStorage
   const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
   const [progress, setProgress] = useState<Progress[]>([]);
-  const { currentUser, isGuest } = useAuth();
+  const { currentUser } = useAuth();
 
   // Load Initial Data
   useEffect(() => {
