@@ -47,17 +47,7 @@ export const PublicRoadmapPage: React.FC<PublicRoadmapPageProps> = ({ shareId })
             setError(false);
 
             try {
-                // 1. Try finding in default context (sync)
-                const contextRoadmap = getRoadmapByShareId(shareId);
-                if (contextRoadmap) {
-                    if (isMounted) {
-                        setRoadmap(contextRoadmap);
-                        setLoading(false);
-                    }
-                    return;
-                }
-
-                // 2. Try finding in mock templates
+                // 1. Try finding in mock templates first (fastest, no DB needed)
                 const mockTemplate = mockRoadmaps.find(r => r.shareId === shareId);
                 if (mockTemplate) {
                     if (isMounted) {
@@ -67,16 +57,20 @@ export const PublicRoadmapPage: React.FC<PublicRoadmapPageProps> = ({ shareId })
                     return;
                 }
 
-                // 3. Fetch from DB
+                // 2. Fetch from DB
                 const result = await dbRequest.getPublicRoadmap(shareId);
                 if (isMounted) {
                     if (result) {
                         setRoadmap(result);
                     } else {
+                        // If result is null, it means not found or error caught in service
                         setError(true);
                     }
                 }
-            } catch (e) {
+            } catch (e: any) {
+                // Ignore AbortError if it happens
+                if (e.name === 'AbortError') return;
+
                 console.error("Failed to fetch public roadmap", e);
                 if (isMounted) setError(true);
             } finally {
@@ -89,7 +83,10 @@ export const PublicRoadmapPage: React.FC<PublicRoadmapPageProps> = ({ shareId })
         return () => {
             isMounted = false;
         };
-    }, [shareId, getRoadmapByShareId]);
+        // Dependency array: only re-run if shareId changes. 
+        // We purposefully exclude getRoadmapByShareId to avoid re-running when auth/data context updates.
+        // eslint-disable-next-line
+    }, [shareId]);
 
     if (loading) {
         return (
