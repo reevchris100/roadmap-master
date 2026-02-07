@@ -23,20 +23,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     let mounted = true;
 
-    async function getInitialSession() {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (mounted && session) {
-          await handleUserSession(session);
-        } else if (mounted) {
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error("Error checking initial session:", error);
-        if (mounted) setLoading(false);
-      }
-    }
-
     async function handleUserSession(session: Session) {
       try {
         const { data: profile, error } = await supabase
@@ -56,23 +42,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           subscriptionStatus: profile?.subscription_status === 'PRO' ? SubscriptionStatus.PRO : SubscriptionStatus.FREE,
           createdAt: new Date(session.user.created_at),
         };
-        setCurrentUser(user);
+
+        if (mounted) {
+          setCurrentUser(user);
+        }
       } catch (e) {
         console.error("Error setting user:", e);
+        // Even if profile fails, we have the session, so we should arguably at least set the basic user
+        // But for now, we'll error out. 
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
 
-    getInitialSession();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        // console.log("Auth State Change:", _event, session?.user?.id);
         if (session) {
           await handleUserSession(session);
         } else {
-          setCurrentUser(null);
-          setLoading(false);
+          if (mounted) {
+            setCurrentUser(null);
+            setLoading(false);
+          }
         }
       }
     );
