@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { Milestone as MilestoneType, Roadmap } from '../types';
 import { useData } from '../contexts/DataContext';
 import { LinkIcon, SparklesIcon } from './icons/Icons';
@@ -35,12 +35,25 @@ interface PublicRoadmapPageProps {
 
 export const PublicRoadmapPage: React.FC<PublicRoadmapPageProps> = ({ shareId, onHome }) => {
     const { getRoadmapByShareId } = useData();
-    // Initialize from context if available, but don't rely on it effectively being there immediately
-    const [roadmap, setRoadmap] = useState<Roadmap | undefined>(() => getRoadmapByShareId(shareId));
-    const [loading, setLoading] = useState(true);
+
+    // 1. Initialize aggressively from all known sources to avoid loading state if possible
+    const [roadmap, setRoadmap] = useState<Roadmap | undefined>(() => {
+        const fromContext = getRoadmapByShareId(shareId);
+        if (fromContext) return fromContext;
+        return mockRoadmaps.find(r => r.shareId === shareId);
+    });
+
+    // If we found it immediately, no loading needed.
+    const [loading, setLoading] = useState(!roadmap);
     const [error, setError] = useState<boolean>(false);
 
     useEffect(() => {
+        // If we already have the roadmap, don't fetch.
+        if (roadmap) {
+            setLoading(false);
+            return;
+        }
+
         let isMounted = true;
 
         const loadRoadmap = async () => {
@@ -48,31 +61,30 @@ export const PublicRoadmapPage: React.FC<PublicRoadmapPageProps> = ({ shareId, o
             setError(false);
 
             try {
-                // 1. Try finding in mock templates first (fastest, no DB needed)
-                const mockTemplate = mockRoadmaps.find(r => r.shareId === shareId);
-                if (mockTemplate) {
-                    if (isMounted) {
-                        setRoadmap(mockTemplate);
-                        setLoading(false);
-                    }
-                    return;
-                }
+                // Fetch from DB with detailed error logging and Timeout
+                const fetchPromise = dbRequest.getPublicRoadmap(shareId);
+                const timeoutPromise = new Promise<null>((_, reject) =>
+                    setTimeout(() => reject(new Error('Request Timeout')), 10000)
+                );
 
-                // 2. Fetch from DB
-                const result = await dbRequest.getPublicRoadmap(shareId);
+                const result = await Promise.race([fetchPromise, timeoutPromise]);
+
                 if (isMounted) {
                     if (result) {
                         setRoadmap(result);
                     } else {
-                        // If result is null, it means not found or error caught in service
+                        console.warn("Public roadmap returned null (not found or private)");
                         setError(true);
                     }
                 }
             } catch (e: any) {
-                // Ignore AbortError if it happens
-                if (e.name === 'AbortError') return;
+                // Robustly check for AbortError or cancelled requests
+                if (e?.name === 'AbortError' || e?.message?.includes('aborted')) {
+                    console.log("Fetch aborted");
+                    return;
+                }
 
-                console.error("Failed to fetch public roadmap", e);
+                console.error("Failed to fetch public roadmap:", e);
                 if (isMounted) setError(true);
             } finally {
                 if (isMounted) setLoading(false);
@@ -84,19 +96,18 @@ export const PublicRoadmapPage: React.FC<PublicRoadmapPageProps> = ({ shareId, o
         return () => {
             isMounted = false;
         };
-        // Dependency array: only re-run if shareId changes. 
-        // We purposefully exclude getRoadmapByShareId to avoid re-running when auth/data context updates.
         // eslint-disable-next-line
     }, [shareId]);
 
-    const handleHomeClick = (e: React.MouseEvent) => {
+    const handleHomeClick = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
         if (onHome) {
             onHome();
         } else {
+            // Fallback if no handler provided
             window.location.href = '/';
         }
-    };
+    }, [onHome]);
 
     if (loading) {
         return (

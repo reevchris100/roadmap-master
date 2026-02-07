@@ -33,9 +33,12 @@ const AppContent: React.FC = () => {
   const [isRazorpayModalOpen, setIsRazorpayModalOpen] = useState(false);
 
   useEffect(() => {
+    // Only check URL on initial mount
     const path = window.location.pathname;
     if (path.startsWith('/share/')) {
-      const shareId = path.split('/')[2];
+      const parts = path.split('/');
+      // Handle cases like /share/xyz or /share/xyz/
+      const shareId = parts[2];
       if (shareId) {
         setPublicShareId(shareId);
       }
