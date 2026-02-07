@@ -23,6 +23,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     let mounted = true;
 
+    // Safety timeout: if Supabase takes too long, we must eventually render.
+    const timeoutId = setTimeout(() => {
+      if (mounted) {
+        console.warn("Auth initialization timed out, forcing render.");
+        setLoading(false);
+      }
+    }, 5000);
+
     async function handleUserSession(session: Session) {
       try {
         const { data: profile, error } = await supabase
@@ -48,24 +56,38 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       } catch (e) {
         console.error("Error setting user:", e);
-        // Even if profile fails, we have the session, so we should arguably at least set the basic user
-        // But for now, we'll error out. 
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
       }
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        // console.log("Auth State Change:", _event, session?.user?.id);
+    // Initialize: Check session immediately
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+      if (error) {
+        console.error("Error getting session:", error);
+        if (mounted) setLoading(false);
+        return;
+      }
+
+      if (mounted) {
         if (session) {
           await handleUserSession(session);
-        } else {
-          if (mounted) {
+        }
+        // Always set loading to false after initial check, regardless of session presence
+        setLoading(false);
+      }
+    });
+
+    // Listen for changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (mounted) {
+          // console.log("Auth State Change:", _event);
+          if (session) {
+            // If we already have a user matching this session, we might not need to re-fetch,
+            // but checking profile updates is safer.
+            await handleUserSession(session);
+          } else {
             setCurrentUser(null);
-            setLoading(false);
+            // setLoading(false); // Initial loading is handled by getSession, subsequent changes don't reset loading state
           }
         }
       }
@@ -73,6 +95,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     return () => {
       mounted = false;
+      clearTimeout(timeoutId);
       subscription?.unsubscribe();
     };
   }, []);
