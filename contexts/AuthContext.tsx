@@ -32,6 +32,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, 5000);
 
     async function handleUserSession(session: Session) {
+      // Default user object from session (fallback)
+      let user: User = {
+        id: session.user.id,
+        email: session.user.email || '',
+        name: session.user.user_metadata?.full_name || session.user.email,
+        subscriptionStatus: SubscriptionStatus.FREE,
+        createdAt: new Date(session.user.created_at),
+      };
+
       try {
         const { data: profile, error } = await supabase
           .from('profiles')
@@ -39,23 +48,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           .eq('id', session.user.id)
           .single();
 
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error fetching profile:', error);
-        }
-
-        const user: User = {
-          id: session.user.id,
-          email: session.user.email || '',
-          name: session.user.user_metadata?.full_name || session.user.email,
-          subscriptionStatus: profile?.subscription_status === 'PRO' ? SubscriptionStatus.PRO : SubscriptionStatus.FREE,
-          createdAt: new Date(session.user.created_at),
-        };
-
-        if (mounted) {
-          setCurrentUser(user);
+        if (!error && profile) {
+          user.subscriptionStatus = profile.subscription_status === 'PRO' ? SubscriptionStatus.PRO : SubscriptionStatus.FREE;
+        } else if (error && error.code !== 'PGRST116') {
+          console.warn('Profile fetch warning (using defaults):', error.message);
         }
       } catch (e) {
-        console.error("Error setting user:", e);
+        console.warn("Profile fetch failed entirely (using defaults)", e);
+      } finally {
+        if (mounted) {
+          setCurrentUser(user);
+          setLoading(false);
+        }
       }
     }
 
