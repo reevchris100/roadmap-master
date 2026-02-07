@@ -23,13 +23,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     let mounted = true;
 
-    // Safety timeout: if Supabase takes too long, we must eventually render.
+    // Safety timeout: Ensure we generally don't hang if Supabase event doesn't fire
     const timeoutId = setTimeout(() => {
       if (mounted) {
-        console.warn("Auth initialization timed out, forcing render.");
-        setLoading(false);
+        // Only force false if still loading. 
+        // Checking state inside timeout closure is tricky, relying on React state update usually okay
+        setLoading(prev => {
+          if (prev) console.warn("Auth check timed out, forcing render");
+          return false;
+        });
       }
-    }, 5000);
+    }, 4000);
 
     async function handleUserSession(session: Session) {
       // Default user object from session (fallback)
@@ -50,11 +54,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         if (!error && profile) {
           user.subscriptionStatus = profile.subscription_status === 'PRO' ? SubscriptionStatus.PRO : SubscriptionStatus.FREE;
-        } else if (error && error.code !== 'PGRST116') {
-          console.warn('Profile fetch warning (using defaults):', error.message);
         }
       } catch (e) {
-        console.warn("Profile fetch failed entirely (using defaults)", e);
+        console.warn("Profile fetch error", e);
       } finally {
         if (mounted) {
           setCurrentUser(user);
@@ -63,35 +65,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     }
 
-    // Initialize: Check session immediately
-    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
-      if (error) {
-        console.error("Error getting session:", error);
-        if (mounted) setLoading(false);
-        return;
-      }
-
-      if (mounted) {
-        if (session) {
-          await handleUserSession(session);
-        }
-        // Always set loading to false after initial check, regardless of session presence
-        setLoading(false);
-      }
-    });
-
-    // Listen for changes
+    // Listen for auth changes (fires immediately with current session)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         if (mounted) {
-          // console.log("Auth State Change:", _event);
           if (session) {
-            // If we already have a user matching this session, we might not need to re-fetch,
-            // but checking profile updates is safer.
             await handleUserSession(session);
           } else {
             setCurrentUser(null);
-            // setLoading(false); // Initial loading is handled by getSession, subsequent changes don't reset loading state
+            setLoading(false);
           }
         }
       }
