@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { MenuIcon, UserIcon, CoffeeIcon, LogoutIcon } from './icons/Icons';
+import { MenuIcon, UserIcon, CoffeeIcon, LogoutIcon, GoogleIcon } from './icons/Icons';
 import { useAuth } from '../contexts/AuthContext';
 import type { Page } from '../types';
 
@@ -63,8 +63,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick, navigateTo, headerC
         {!currentUser && (
           <button
             onClick={loginWithGoogle}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium py-2 px-4 rounded-md transition-colors whitespace-nowrap"
+            className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium py-2 px-4 rounded-md transition-colors whitespace-nowrap"
           >
+            <GoogleIcon className="w-5 h-5" />
             Sign in with Google
           </button>
         )}
